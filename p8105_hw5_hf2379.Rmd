@@ -73,7 +73,16 @@ longitudinal_study_df = source_df %>%
 study_plot = longitudinal_study_df %>% 
   group_by(observation) %>% 
   ggplot(aes(x = week, y = values, color = arm, group = arm)) + 
-  geom_path()
+  geom_path() + 
+  labs(
+    title = "Differences in Study Arm Observation Values Over 8 Weeks",
+    x = "Week",
+    y = "Observation Values"
+  )
+
+study_plot
 ```
 
+#### Comment on Plot
 
+The mean value for the control arm stayed roughly the same around `r longitudinal_study_df %>% group_by(arm) %>% filter(arm == "con") %>%  summarize(mean = round(mean(values), digits = 2)) %>% pull(mean)` for 8 weeks while the mean value for the experiement arm increased to `r longitudinal_study_df %>% group_by(arm) %>% filter(arm == "exp" & week == 8) %>%  summarize(mean = round(mean(values), digits = 2)) %>% pull(mean)` by week 8. Assuming an increase in values is a good thing, the experimental group improved compared to the control group over 8 weeks of treatment. 
