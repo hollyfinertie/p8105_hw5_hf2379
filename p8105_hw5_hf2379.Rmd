@@ -42,20 +42,30 @@ iris_no_missing = map_df(iris_with_missing, ~update_missing(.x))
 ## Problem 2
 
 ```{r}
-file_df = tibble(
-   file = list.files(path = "./data/"), 
-   path = str_c("./data/", file)) %>% 
-  select(path)
-  
-
 read_file = function(x) {
   
   y = read_csv(x)
   
 }
 
-load = map_df(file_df, read_file)
+file_df = tibble(
+   file = list.files(path = "./data/"), 
+   path = str_c("./data/", file))
 
+dataset = file_df %>% 
+  select(path) %>% 
+  mutate(
+    load = map(file_df %>% pull(path), read_file)
+  ) %>% 
+  select(path, load) %>% 
+  unnest(cols = load) %>% 
+  pivot_longer(
+    week_1:week_8, 
+    names_to = "week",
+    names_prefix = "week_", 
+    values_to = "values"
+  ) 
+  
 ```
 
 
