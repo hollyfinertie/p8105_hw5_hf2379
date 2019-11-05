@@ -48,24 +48,32 @@ read_file = function(x) {
   
 }
 
-file_df = tibble(
+source_df = tibble(
    file = list.files(path = "./data/"), 
    path = str_c("./data/", file))
 
-dataset = file_df %>% 
-  select(path) %>% 
+longitudinal_study_df = source_df %>% 
   mutate(
-    load = map(file_df %>% pull(path), read_file)
+    load = map(source_df %>% pull(path), read_file)
   ) %>% 
-  select(path, load) %>% 
+  select(file, load) %>% 
   unnest(cols = load) %>% 
   pivot_longer(
     week_1:week_8, 
     names_to = "week",
     names_prefix = "week_", 
     values_to = "values"
-  ) 
-  
+  ) %>% 
+  separate(file, into = c("arm", "observation"), sep = "_" ) %>% 
+  mutate(
+    observation = str_replace(observation, "\\.csv", "")
+  )
+ 
+
+study_plot = longitudinal_study_df %>% 
+  group_by(observation) %>% 
+  ggplot(aes(x = week, y = values, color = arm, group = arm)) + 
+  geom_path()
 ```
 
 
