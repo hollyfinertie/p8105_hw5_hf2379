@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(rvest)
+library(readr)
 
 set.seed(10)
 
@@ -41,7 +42,19 @@ iris_no_missing = map_df(iris_with_missing, ~update_missing(.x))
 ## Problem 2
 
 ```{r}
-file_df = list.files(path = "./data/")
+file_df = tibble(
+   file = list.files(path = "./data/"), 
+   path = str_c("./data/", file)) %>% 
+  select(path)
+  
+
+read_file = function(x) {
+  
+  y = read_csv(x)
+  
+}
+
+load = map_df(file_df, read_file)
 
 ```
 
