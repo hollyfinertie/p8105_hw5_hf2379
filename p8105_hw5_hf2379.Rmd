@@ -120,6 +120,15 @@ sim_results =
   unnest(estimate_dfs) %>% 
   filter(term == "x") %>% 
   select(beta1_input, estimate, p.value) 
+
+plot1 = sim_results %>% 
+  group_by(beta1_input) %>% 
+  summarize(
+    n_sig = sum(p.value <= 0.05), 
+    p_sig = n_sig/n()
+  ) %>% 
+  ggplot(aes(x = beta1_input, y = p_sig)) + 
+  geom_bar(stat = "identity")
   
 ```
 
