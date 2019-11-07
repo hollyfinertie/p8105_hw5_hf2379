@@ -107,7 +107,7 @@ sim_regression = function(n = 30, beta0 = 2, beta1, var = 50) {
 }
 
 sim_results_test = 
-  rerun(10, sim_regression(beta1 = 0)) %>% 
+  rerun(100, sim_regression(beta1 = 0)) %>% 
   bind_rows() %>% 
   filter(term == "x") %>% 
   select(estimate, p.value)
@@ -115,20 +115,68 @@ sim_results_test =
 sim_results = 
   tibble(beta1_input = c(0, 1, 2, 3, 4, 5, 6)) %>% 
   mutate(
-    output_lists = map(.x = beta1_input, ~rerun(10, sim_regression(beta1 = .x))),
+    output_lists = map(.x = beta1_input, ~rerun(100, sim_regression(beta1 = .x))),
     estimate_dfs = map(output_lists, bind_rows)) %>% 
   unnest(estimate_dfs) %>% 
   filter(term == "x") %>% 
-  select(beta1_input, estimate, p.value) 
+  select(beta1_input, estimate, p.value) %>% 
+  mutate(
+    reject = case_when(
+      p.value > 0.05 ~ "No",
+      p.value <= 0.05 ~ "Yes",
+      TRUE     ~ ""
+  ))
+  
 
 plot1 = sim_results %>% 
   group_by(beta1_input) %>% 
   summarize(
-    n_sig = sum(p.value <= 0.05), 
+    n_sig = sum(reject == "Yes"), 
     p_sig = n_sig/n()
   ) %>% 
   ggplot(aes(x = beta1_input, y = p_sig)) + 
-  geom_bar(stat = "identity")
-  
+  geom_point() +
+  labs(
+    title = "Association Between Power and Effect Size", 
+    x = "True Value of Beta1", 
+    y = "Power"
+  )
+
+plot1
+
+```
+
+
+As expected, power increases with effect size. When beta1 increases, the effect size increases and therefore it is "easier" to correctly reject the null hypothesis. This increases the power. 
+
+
+
+
+
+```{r}
+plot2_data = sim_results %>% 
+  group_by(beta1_input) %>% 
+  mutate(
+    mean_beta = mean(estimate)
+  ) 
+
+plot3_data = sim_results %>% 
+  group_by(beta1_input) %>% 
+  filter(reject == "Yes") %>% 
+  summarize(
+    mean_beta = mean(estimate)
+  ) 
+
+
+  ggplot(plot2_data, aes(x = beta1_input, y = mean_beta)) + 
+  geom_point() +
+  geom_point(data = plot3_data, color = "green") + 
+  labs(
+    title = "True Beta Value and Mean Estimated Beta Value
+    where Red = Rejected Samples and Black = N", 
+    x = "True Beta Value", 
+    y = "Mean Estimated Value"
+  )
+
 ```
 
